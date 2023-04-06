@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Update system
+apt update
+apt -y dist-upgrade && apt -y autoremove
+
+# Install required system packages
+sudo apt install -y python3 python3-venv python3-pip
+
 # Create a project directory
 mkdir warn_dashboard
 cd warn_dashboard
