@@ -29,6 +29,7 @@ touch app.py templates/index.html static/main.js static/styles.css
 cat > app.py << EOL
 from flask import Flask, render_template, jsonify
 import pandas as pd
+import datetime
 app = Flask(__name__)
 def process_data():
     df = pd.read_excel("warn_report.xlsx", engine="openpyxl")
@@ -51,18 +52,39 @@ def process_data():
     processed_data = {
         "company_data": company_data.to_dict(),
         "state_data": state_data.to_dict(),
-        "month_data": month_data_dict
+        "month_data": month_data_dict,
+        "next_layoff": get_next_layoff(df)
     }
     return processed_data
 @app.route("/")
+
+@app.route('/')
 def index():
     data = process_data()
-    return render_template("index.html", data=data)
-@app.route("/data")
+    state_data = data["state_data"]
+    next_layoff = get_next_layoff(data["warn_data"])
+    return render_template('index.html', state_data=state_data, next_layoff=next_layoff)
+
 def data():
     return jsonify(process_data())
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
+    
+def get_next_layoff(warn_data):
+    current_date = datetime.datetime.now().date()
+    future_layoffs = warn_data[warn_data["Notice\nDate"] > current_date]
+    if not future_layoffs.empty:
+        next_layoff = future_layoffs.sort_values("Notice\nDate").iloc[0]
+        layoff_info = {
+            "company": next_layoff["Company"],
+            "layoff_date": next_layoff["Notice\nDate"].strftime("%Y-%m-%d"),
+            "city": next_layoff["City"],
+            "state": next_layoff["State"],
+            "employees_affected": next_layoff["No. Of\nEmployees"]
+        }
+        return layoff_info
+    else:
+        return None
 EOL
 
 # Write sample code to templates/index.html
@@ -80,6 +102,7 @@ cat > templates/index.html << EOL
 </head>
 <body>
     <h1>WARN Dashboard</h1>
+    <div id="next-layoff"></div>
     <div>
         <h2>Top 10 Companies by Layoffs</h2>
         <canvas id="companyBarChart"></canvas>
@@ -126,6 +149,7 @@ function createBarChart(ctx, labels, data) {
         }
     });
 }
+
 function createPieChart(ctx, labels, data) {
     return new Chart(ctx, {
         type: 'pie',
@@ -231,6 +255,20 @@ function createLineChart(ctx, labels, data, sortByMonth = false) {
     });
 }
 
+function displayNextLayoff(nextLayoff) {
+    if (nextLayoff) {
+        const nextLayoffContainer = document.getElementById("next-layoff");
+        const layoffDate = new Date(nextLayoff.layoff_date).toLocaleDateString();
+        nextLayoffContainer.innerHTML = `
+            <h3>Next Planned Layoff</h3>
+            <p><strong>Company:</strong> ${nextLayoff.company}</p>
+            <p><strong>Date:</strong> ${layoffDate}</p>
+            <p><strong>Location:</strong> ${nextLayoff.city}, ${nextLayoff.state}</p>
+            <p><strong>Employees Affected:</strong> ${nextLayoff.employees_affected}</p>
+        `;
+    }
+}
+
 document.addEventListener("DOMContentLoaded", function() {
     fetch('/data')
         .then(response => response.json())
@@ -244,8 +282,10 @@ document.addEventListener("DOMContentLoaded", function() {
             const monthLabels = Object.keys(data.month_data);
             const monthData = Object.values(data.month_data);
             createLineChart(monthLineCtx, monthLabels, monthData, true);
+            displayNextLayoff(data.next_layoff); // Add this line
         });
 });
+
 EOL
 
 # Write sample code to static/styles.css
