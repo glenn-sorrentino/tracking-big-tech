@@ -47,6 +47,17 @@ def process_data():
         "company_data": company_data.to_dict(),
         "state_data": state_data.to_dict()
     }
+    # Group data by month
+    df["Notice Date"] = pd.to_datetime(df["Notice Date"])
+    df_2023 = df[df["Notice Date"].dt.year == 2023]
+    month_data = df_2023.groupby(df_2023["Notice Date"].dt.to_period("M"))["No. Of\nEmployees"].sum()
+
+    # Convert data to JSON serializable format
+    processed_data = {
+        "company_data": company_data.to_dict(),
+        "state_data": state_data.to_dict(),
+        "month_data": month_data.to_timestamp().strftime("%b %Y").to_dict()
+    }
 
     return processed_data
 
@@ -143,15 +154,38 @@ function createPieChart(ctx, labels, data) {
     });
 }
 
-function createMap(data) {
-  const map = L.map('map').setView([37.7749, -122.4194], 6);
+function createMap(state_data) {
+    const map = L.map('map').setView([37.7749, -122.4194], 6);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-  }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(map);
 
-  // Add code to visualize the county data on the map.
-  // You'll need to fetch GeoJSON data for California counties and style them according to the layoffs data.
+    // Fetch GeoJSON data for California counties
+    fetch('https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/california-counties.geojson')
+        .then(response => response.json())
+        .then(geojsonData => {
+            L.geoJson(geojsonData, {
+                style: feature => {
+                    const county_name = feature.properties.name;
+                    const layoffs = state_data[county_name] || 0;
+                    const fillColor = layoffs > 0 ? 'red' : 'green';
+
+                    return {
+                        fillColor: fillColor,
+                        fillOpacity: 0.5,
+                        weight: 1,
+                        color: 'black',
+                        opacity: 1
+                    };
+                },
+                onEachFeature: (feature, layer) => {
+                    const county_name = feature.properties.name;
+                    const layoffs = state_data[county_name] || 0;
+                    layer.bindPopup(`<h3>${county_name}</h3><p>Layoffs: ${layoffs}</p>`);
+                }
+            }).addTo(map);
+        });
 }
 
 function createLineChart(ctx, labels, data) {
@@ -192,11 +226,8 @@ document.addEventListener("DOMContentLoaded", function() {
             const companyData = Object.values(data.company_data);
             createBarChart(companyBarCtx, companyLabels, companyData);
 
-            const statePieCtx = document.getElementById('statePieChart').getContext('2d');
-            const stateLabels = Object.keys(data.state_data);
-            const stateData = Object.values(data.state_data);
-            createPieChart(statePieCtx, stateLabels, stateData);
-            
+            createMap(data.state_data);
+
             const monthLineCtx = document.getElementById('monthLineChart').getContext('2d');
             const monthLabels = Object.keys(data.month_data);
             const monthData = Object.values(data.month_data);
