@@ -208,13 +208,13 @@ function createMap(state_data) {
 function createLineChart(ctx, labels, data, sortByMonth = false) {
     // Assign an index value to each month if sortByMonth is true
     const monthIndices = sortByMonth ? {
-        'January': 0, 'February': 1, 'March': 2, 'April': 3, 'May': 4, 'June': 5,
-        'July': 6, 'August': 7, 'September': 8, 'October': 9, 'November': 10, 'December': 11
+        'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+        'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
     } : null;
 
     // Sort labels and data based on the month indices
     const sortedData = sortByMonth ? labels.map((label, i) => [label, data[i]])
-                                         .sort((a, b) => monthIndices[a[0]] - monthIndices[b[0]])
+                                         .sort((a, b) => monthIndices[a[0].slice(0, 3)] - monthIndices[b[0].slice(0, 3)])
                                    : labels.map((label, i) => [label, data[i]]);
     const sortedLabels = sortedData.map(([label, _]) => label);
     const sortedValues = sortedData.map(([_, value]) => value);
