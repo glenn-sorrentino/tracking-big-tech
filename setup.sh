@@ -205,15 +205,27 @@ function createMap(state_data) {
             }).addTo(map);
         });
 }
+function createLineChart(ctx, labels, data, sortByMonth = false) {
+    // Assign an index value to each month if sortByMonth is true
+    const monthIndices = sortByMonth ? {
+        'January': 0, 'February': 1, 'March': 2, 'April': 3, 'May': 4, 'June': 5,
+        'July': 6, 'August': 7, 'September': 8, 'October': 9, 'November': 10, 'December': 11
+    } : null;
 
-function createLineChart(ctx, labels, data) {
+    // Sort labels and data based on the month indices
+    const sortedData = sortByMonth ? labels.map((label, i) => [label, data[i]])
+                                         .sort((a, b) => monthIndices[a[0]] - monthIndices[b[0]])
+                                   : labels.map((label, i) => [label, data[i]]);
+    const sortedLabels = sortedData.map(([label, _]) => label);
+    const sortedValues = sortedData.map(([_, value]) => value);
+
     return new Chart(ctx, {
         type: 'line',
         data: {
-            labels: labels,
+            labels: sortedLabels,
             datasets: [{
                 label: 'Employees Affected',
-                data: data,
+                data: sortedValues,
                 backgroundColor: 'rgba(75, 192, 192, 0.2)',
                 borderColor: 'rgba(75, 192, 192, 1)',
                 borderWidth: 1,
