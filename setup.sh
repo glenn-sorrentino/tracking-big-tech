@@ -30,6 +30,8 @@ cat > app.py << EOL
 from flask import Flask, render_template, jsonify
 import pandas as pd
 
+app = Flask(__name__)
+
 def process_data():
     df = pd.read_excel("warn_report.xlsx", engine="openpyxl")
 
