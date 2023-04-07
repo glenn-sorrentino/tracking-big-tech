@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WARN Dashboard</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>WARN Dashboard</h1>
+    <div>
+        <h2>Top 10 Companies by Layoffs</h2>
+        <canvas id="companyBarChart"></canvas>
+    </div>
+    <div>
+        <h2>Layoffs by County</h2>
+        <div id="map" style="width: 100%; height: 500px;"></div>
+    </div>
+    <div>
+        <h2>Layoffs by Month (2023)</h2>
+        <canvas id="monthLineChart"></canvas>
+    </div>
+    <script src="/static/main.js"></script>
+</body>
+</html>
