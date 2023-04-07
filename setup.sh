@@ -214,7 +214,14 @@ function createLineChart(ctx, labels, data, sortByMonth = false) {
 
     // Sort labels and data based on the month indices
     const sortedData = sortByMonth ? labels.map((label, i) => [label, data[i]])
-                                         .sort((a, b) => monthIndices[a[0].slice(0, 3)] - monthIndices[b[0].slice(0, 3)])
+                                         .sort((a, b) => {
+                                             const aMonth = a[0].slice(0, 3);
+                                             const bMonth = b[0].slice(0, 3);
+                                             const aYear = parseInt(a[0].slice(4));
+                                             const bYear = parseInt(b[0].slice(4));
+
+                                             return (aYear - bYear) || (monthIndices[aMonth] - monthIndices[bMonth]);
+                                         })
                                    : labels.map((label, i) => [label, data[i]]);
     const sortedLabels = sortedData.map(([label, _]) => label);
     const sortedValues = sortedData.map(([_, value]) => value);
