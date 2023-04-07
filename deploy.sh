@@ -131,13 +131,6 @@ certbot --nginx --agree-tos --non-interactive --email demo@scidsg.org --agree-to
 
 # Set up cron job to renew SSL certificate
 (crontab -l 2>/dev/null; echo "30 2 * * 1 /usr/bin/certbot renew --quiet") | crontab -
-echo "
-
-# Create a virtual environment and activate it
-python3 -m venv venv
-source venv/bin/activate
-
-
 
 # Create necessary directories and files
 mkdir templates static
@@ -361,9 +354,8 @@ body {
 }
 EOL
 
-echo "Basic environment and file structure have been created. You can now modify and expand the code as needed."
-
-✅ Installation complete!
+echo "
+Basic environment and file structure have been created. You can now modify and expand the code as needed.
                                                
 https://$DOMAIN
 "
