@@ -10,6 +10,9 @@ sudo apt install -y python3 python3-venv python3-pip whiptail nginx git certbot 
 # Function to display error message and exit
 error_exit() {
     echo "An error occurred during installation. Please check the output above for more details."
+    if [ -n "${FLASK_PID}" ]; then
+        kill ${FLASK_PID}
+    fi
     exit 1
 }
 
@@ -33,7 +36,8 @@ git clone https://github.com/glenn-sorrentino/warn-dashboard.git
 cd warn-dashboard
 
 # Download the XLS file
-wget -O warn_report.xlsx "https://edd.ca.gov/siteassets/files/jobs_and_training/warn/warn_report.xlsx"
+mkdir -p data
+wget -O data/warn_report.xlsx "https://edd.ca.gov/siteassets/files/jobs_and_training/warn/warn_report.xlsx"
 
 # Create a virtual environment and activate it
 python3 -m venv venv
@@ -42,12 +46,13 @@ source venv/bin/activate
 # Install required packages
 pip install Flask pandas openpyxl
 
-# Check if the application is running and listening on the expected address and port
-sleep 5
-if ! netstat -tuln | grep -q '127.0.0.1:5000'; then
-    echo "The application is not running as expected. Please check the application logs for more details."
-    error_exit
-fi
+# Run the Flask application in the background
+echo "Starting the Flask application..."
+source venv/bin/activate
+python app.py &
+
+# Store the Flask process ID
+FLASK_PID=$!
 
 # Enable the Tor hidden service
 sudo ln -sf /etc/nginx/sites-available/warn-dashboard.nginx /etc/nginx/sites-enabled/
@@ -157,10 +162,3 @@ https://$DOMAIN
 Have feedback? Send us an email at feedback@scidsg.org.
 "
 
-echo "Basic environment and file structure have been created. You can now modify and expand the code as needed."
-
-# Run the Flask application
-echo "Starting the Flask application..."
-cd warn-dashboard
-source venv/bin/activate
-python app.py
