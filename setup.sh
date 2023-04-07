@@ -30,7 +30,25 @@ cat > app.py << EOL
 from flask import Flask, render_template, jsonify
 import pandas as pd
 import datetime
+
 app = Flask(__name__)
+
+def get_next_layoff(warn_data):
+    current_date = datetime.datetime.now().date()
+    future_layoffs = warn_data[warn_data["Notice\nDate"] > current_date]
+    if not future_layoffs.empty:
+        next_layoff = future_layoffs.sort_values("Notice\nDate").iloc[0]
+        layoff_info = {
+            "company": next_layoff["Company"],
+            "layoff_date": next_layoff["Notice\nDate"].strftime("%Y-%m-%d"),
+            "city": next_layoff["City"],
+            "state": next_layoff["State"],
+            "employees_affected": next_layoff["No. Of\nEmployees"]
+        }
+        return layoff_info
+    else:
+        return None
+
 def process_data():
     df = pd.read_excel("warn_report.xlsx", engine="openpyxl")
     # Convert "No. Of\nEmployees" column to numeric values
@@ -69,22 +87,7 @@ def data():
     return jsonify(process_data())
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
-    
-def get_next_layoff(warn_data):
-    current_date = datetime.datetime.now().date()
-    future_layoffs = warn_data[warn_data["Notice\nDate"] > current_date]
-    if not future_layoffs.empty:
-        next_layoff = future_layoffs.sort_values("Notice\nDate").iloc[0]
-        layoff_info = {
-            "company": next_layoff["Company"],
-            "layoff_date": next_layoff["Notice\nDate"].strftime("%Y-%m-%d"),
-            "city": next_layoff["City"],
-            "state": next_layoff["State"],
-            "employees_affected": next_layoff["No. Of\nEmployees"]
-        }
-        return layoff_info
-    else:
-        return None
+   
 EOL
 
 # Write sample code to templates/index.html
