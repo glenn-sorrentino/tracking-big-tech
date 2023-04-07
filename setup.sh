@@ -49,11 +49,17 @@ def process_data():
     df_2023 = df[df["Notice\nDate"].dt.year == 2023]
     month_data = df_2023.groupby(df_2023["Notice\nDate"].dt.to_period("M"))["No. Of\nEmployees"].sum()
 
+    # Convert index to the desired format
+    formatted_index = month_data.index.to_timestamp().strftime("%b %Y")
+
+    # Create a dictionary from the formatted index and the data
+    month_data_dict = dict(zip(formatted_index, month_data))
+
     # Convert data to JSON serializable format
     processed_data = {
         "company_data": company_data.to_dict(),
         "state_data": state_data.to_dict(),
-        "month_data": month_data.to_timestamp().strftime("%b %Y").to_dict()
+        "month_data": month_data_dict
     }
 
     return processed_data
