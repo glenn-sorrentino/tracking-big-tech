@@ -2,7 +2,7 @@ from flask import Flask, render_template, jsonify
 import pandas as pd
 app = Flask(__name__)
 def process_data():
-    df = pd.read_excel("warn_report.xlsx", engine="openpyxl")
+    df = pd.read_excel("data/warn_report.xlsx", engine="openpyxl")
     # Convert "No. Of\nEmployees" column to numeric values
     df["No. Of\nEmployees"] = pd.to_numeric(df["No. Of\nEmployees"], errors='coerce')
     # Group data by company and state
