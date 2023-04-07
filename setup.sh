@@ -175,6 +175,11 @@ function createMap(state_data) {
                     const layoffs = state_data[county_name] || 0;
                     const fillColor = layoffs > 0 ? 'red' : 'green';
 
+                    // Log unmatched county names
+                    if (!state_data[county_name]) {
+                        console.log(`Unmatched county: ${county_name}`);
+                    }
+
                     return {
                         fillColor: fillColor,
                         fillOpacity: 0.5,
