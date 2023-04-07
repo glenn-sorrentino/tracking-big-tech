@@ -47,7 +47,8 @@ def process_data():
 
     # Group data by month
     df_2023 = df[df["Notice\nDate"].dt.year == 2023]
-    month_data = df_2023.groupby(df_2023["Notice\nDate"].dt.to_period("M"))["No. Of\nEmployees"].sum()
+    # Group data by month
+    month_data = df_2023.groupby(df_2023["Notice\nDate"].dt.to_period("M"))["No. Of\nEmployees"].sum().sort_index()
 
     # Convert index to the desired format
     formatted_index = month_data.index.to_timestamp().strftime("%b %Y")
@@ -112,8 +113,13 @@ EOL
 # Write sample code to static/main.js
 cat > static/main.js << EOL
 function createBarChart(ctx, labels, data) {
+    // Sort labels and data in descending order based on data
+    const sortedData = labels.map((label, i) => [label, data[i]])
+                              .sort((a, b) => b[1] - a[1]);
+    const sortedLabels = sortedData.map(([label, _]) => label);
+    const sortedValues = sortedData.map(([_, value]) => value);
+
     return new Chart(ctx, {
-        type: 'bar',
         data: {
             labels: labels,
             datasets: [{
