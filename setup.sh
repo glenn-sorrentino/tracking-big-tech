@@ -172,12 +172,13 @@ function createMap(state_data) {
             L.geoJson(geojsonData, {
                 style: feature => {
                     const county_name = feature.properties.name;
-                    const layoffs = state_data[county_name] || 0;
+                    const formatted_county_name = county_name + " County";
+                    const layoffs = state_data[formatted_county_name] || 0;
                     const fillColor = layoffs > 0 ? 'red' : 'green';
 
                     // Log unmatched county names
-                    if (!state_data[county_name]) {
-                        console.log(`Unmatched county: ${county_name}`);
+                    if (!state_data[formatted_county_name]) {
+                        console.log(`Unmatched county: ${formatted_county_name}`);
                     }
 
                     return {
@@ -190,8 +191,9 @@ function createMap(state_data) {
                 },
                 onEachFeature: (feature, layer) => {
                     const county_name = feature.properties.name;
-                    const layoffs = state_data[county_name] || 0;
-                    layer.bindPopup(`<h3>${county_name}</h3><p>Layoffs: ${layoffs}</p>`);
+                    const formatted_county_name = county_name + " County";
+                    const layoffs = state_data[formatted_county_name] || 0;
+                    layer.bindPopup(`<h3>${formatted_county_name}</h3><p>Layoffs: ${layoffs}</p>`);
                 }
             }).addTo(map);
         });
