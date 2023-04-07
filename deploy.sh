@@ -349,6 +349,5 @@ https://$DOMAIN
 
 # Run the Flask application
 echo "Starting the Flask application..."
-cd warn_dashboard
 source venv/bin/activate
 python app.py
