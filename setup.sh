@@ -165,7 +165,7 @@ function createMap(state_data) {
     }).addTo(map);
 
     // Fetch GeoJSON data for California counties
-    fetch('https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/california-counties.geojson')
+    fetch('https://raw.githubusercontent.com/codeforamerica/click_that_hood/main/public/data/california-counties.geojson')
         .then(response => response.json())
         .then(geojsonData => {
             L.geoJson(geojsonData, {
