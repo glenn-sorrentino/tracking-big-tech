@@ -158,6 +158,7 @@ function createPieChart(ctx, labels, data) {
 }
 
 function createMap(state_data) {
+    console.log('State data:', state_data);
     const map = L.map('map').setView([37.7749, -122.4194], 6);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
