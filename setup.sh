@@ -88,42 +88,68 @@ EOL
 
 # Write sample code to static/main.js
 cat > static/main.js << EOL
-document.addEventListener("DOMContentLoaded", function() {
-    const ctx = document.getElementById("myChart").getContext("2d");
-
-    const data = {
-        labels: ["Label 1", "Label 2", "Label 3"],
-        datasets: [{
-            label: "Sample Data",
-            data: [10, 20, 30],
-            backgroundColor: [
-                "rgba(255, 99, 132, 0.2)",
-                "rgba(54, 162, 235, 0.2)",
-                "rgba(255, 206, 86, 0.2)"
-            ],
-            borderColor: [
-                "rgba(255, 99, 132, 1)",
-                "rgba(54, 162, 235, 1)",
-                "rgba(255, 206, 86, 1)"
-            ],
-            borderWidth: 1
-        }]
-    };
-
-    const options = {
-        scales: {
-            y: {
-                beginAtZero: true
+function createBarChart(ctx, labels, data) {
+    return new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Employees Affected',
+                data: data,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
             }
         }
-    };
-
-    const myChart = new Chart(ctx, {
-        type: "bar",
-        data: data,
-        options: options
     });
+}
+
+function createPieChart(ctx, labels, data) {
+    return new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(54, 162, 235, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(54, 162, 235, 1)'
+                ],
+                borderWidth: 1
+            }]
+        }
+    });
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    fetch('/data')
+        .then(response => response.json())
+        .then(data => {
+            const companyBarCtx = document.getElementById('companyBarChart').getContext('2d');
+            const companyLabels = Object.keys(data.company_data);
+            const companyData = Object.values(data.company_data);
+            createBarChart(companyBarCtx, companyLabels, companyData);
+
+            const statePieCtx = document.getElementById('statePieChart').getContext('2d');
+            const stateLabels = Object.keys(data.state_data);
+            const stateData = Object.values(data.state_data);
+            createPieChart(statePieCtx, stateLabels, stateData);
+        });
 });
+
 EOL
 
 # Write sample code to static/styles.css
