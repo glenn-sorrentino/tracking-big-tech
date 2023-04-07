@@ -39,7 +39,7 @@ def process_data():
     df["No. Of\nEmployees"] = pd.to_numeric(df["No. Of\nEmployees"], errors='coerce')
 
     # Group data by company and state
-    company_data = df.groupby("Company")["No. Of\nEmployees"].sum().nlargest(10)
+    company_data = df.groupby("Company")["No. Of\nEmployees"].sum().sort_values(ascending=False).head(10)
     state_data = df.groupby("County/Parish")["No. Of\nEmployees"].sum()
 
     # Convert "Notice\nDate" column to datetime, handling errors with 'coerce'
@@ -164,16 +164,6 @@ function createMap(state_data) {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
-    
-    layer.on({
-    mouseover: function (e) {
-        e.target.openPopup();
-    },
-    mouseout: function (e) {
-        e.target.closePopup();
-    }
-    });
-
 
     // Fetch GeoJSON data for California counties
     fetch('https://raw.githubusercontent.com/codeforamerica/click_that_hood/main/public/data/california-counties.geojson')
