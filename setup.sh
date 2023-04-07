@@ -71,9 +71,11 @@ def process_data():
         "company_data": company_data.to_dict(),
         "state_data": state_data.to_dict(),
         "month_data": month_data_dict,
-        "next_layoff": get_next_layoff(df)
+        "next_layoff": get_next_layoff(df),
+        "df": df.to_json() # Add this line
     }
     return processed_data
+
 @app.route("/")
 
 @app.route('/')
