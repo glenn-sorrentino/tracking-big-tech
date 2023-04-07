@@ -36,8 +36,8 @@ def process_data():
     df = pd.read_excel("warn_report.xlsx", engine="openpyxl")
 
     # Group data by company and state
-    company_data = df.groupby("Company_name")["Employees_affected"].sum().sort_values(ascending=False).head(10)
-    state_data = df.groupby("State")["Employees_affected"].sum()
+    company_data = df.groupby("Company")["No. Of\nEmployees"].sum().sort_values(ascending=False).head(10)
+    state_data = df.groupby("County/Parish")["No. Of\nEmployees"].sum()
 
     # Convert data to JSON serializable format
     processed_data = {
