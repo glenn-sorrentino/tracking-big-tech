@@ -27,13 +27,34 @@ touch app.py templates/index.html static/main.js static/styles.css
 
 # Write sample code to app.py
 cat > app.py << EOL
-from flask import Flask, render_template
+from flask import Flask, render_template, jsonify
+import pandas as pd
 
 app = Flask(__name__)
 
+def process_data():
+    df = pd.read_excel("warn_report.xlsx", engine="openpyxl")
+
+    # Group data by company and state
+    company_data = df.groupby("Company_name")["Employees_affected"].sum().sort_values(ascending=False).head(10)
+    state_data = df.groupby("State")["Employees_affected"].sum()
+
+    # Convert data to JSON serializable format
+    processed_data = {
+        "company_data": company_data.to_dict(),
+        "state_data": state_data.to_dict()
+    }
+
+    return processed_data
+
 @app.route("/")
 def index():
-    return render_template("index.html")
+    data = process_data()
+    return render_template("index.html", data=data)
+
+@app.route("/data")
+def data():
+    return jsonify(process_data())
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
@@ -53,7 +74,12 @@ cat > templates/index.html << EOL
 <body>
     <h1>WARN Dashboard</h1>
     <div>
-        <canvas id="myChart"></canvas>
+        <h2>Top 10 Companies by Layoffs</h2>
+        <canvas id="companyBarChart"></canvas>
+    </div>
+    <div>
+        <h2>Layoffs by State</h2>
+        <canvas id="statePieChart"></canvas>
     </div>
     <script src="/static/main.js"></script>
 </body>
