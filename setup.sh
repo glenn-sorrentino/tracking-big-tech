@@ -120,6 +120,7 @@ function createBarChart(ctx, labels, data) {
     const sortedValues = sortedData.map(([_, value]) => value);
 
     return new Chart(ctx, {
+        type: 'bar', // Add this line to specify the chart type
         data: {
             labels: sortedLabels,
             datasets: [{
