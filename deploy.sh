@@ -4,18 +4,39 @@
 apt update
 apt -y dist-upgrade && apt -y autoremove
 
+# Install required system packages
+sudo apt install -y python3 python3-venv python3-pip nginx git certbot python3-certbot-nginx
+
+# Function to display error message and exit
+error_exit() {
+    echo "An error occurred during installation. Please check the output above for more details."
+    exit 1
+}
+
+# Trap any errors and call the error_exit function
+trap error_exit ERR
+
 DOMAIN=trackingbig.tech
 export DOMAIN
 
-# Install required system packages
-sudo apt install -y python3 python3-venv python3-pip nginx
+# Debug: Print the value of the DOMAIN variable
+echo "Domain: ${DOMAIN}"
+
+# Clone the repo
+git clone https://github.com/glenn-sorrentino/warn-dashboard.git
 
 # Create a project directory
-mkdir /var/www/html/warn_dashboard
-cd /var/www/html/warn_dashboard
+cd warn_dashboard
 
 # Download the XLS file
 wget -O warn_report.xlsx "https://edd.ca.gov/siteassets/files/jobs_and_training/warn/warn_report.xlsx"
+
+# Create a virtual environment and install required packages
+python3 -m venv venv
+source venv/bin/activate
+pip install Flask 
+pip install pandas
+pip install openpyxl
 
 # Configure Nginx
 cat > /etc/nginx/sites-available/hush-line.nginx << EOL
@@ -116,8 +137,7 @@ echo "
 python3 -m venv venv
 source venv/bin/activate
 
-# Install required packages
-pip install Flask pandas openpyxl
+
 
 # Create necessary directories and files
 mkdir templates static
