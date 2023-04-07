@@ -17,6 +17,101 @@ cd /var/www/html/warn_dashboard
 # Download the XLS file
 wget -O warn_report.xlsx "https://edd.ca.gov/siteassets/files/jobs_and_training/warn/warn_report.xlsx"
 
+# Configure Nginx
+cat > /etc/nginx/sites-available/hush-line.nginx << EOL
+server {
+    listen 80;
+    server_name ${DOMAIN};
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_connect_timeout 300s;
+        proxy_send_timeout 300s;
+        proxy_read_timeout 300s;
+    }
+    
+        add_header Strict-Transport-Security "max-age=63072000; includeSubdomains";
+        add_header X-Frame-Options DENY;
+        add_header X-Content-Type-Options nosniff;
+        add_header Content-Security-Policy "default-src 'self'; frame-ancestors 'none'";
+        add_header Permissions-Policy "geolocation=(), midi=(), notifications=(), push=(), sync-xhr=(), microphone=(), camera=(), magnetometer=(), gyroscope=(), speaker=(), vibrate=(), fullscreen=(), payment=(), interest-cohort=()";
+        add_header Referrer-Policy "no-referrer";
+        add_header X-XSS-Protection "1; mode=block";
+}
+EOL
+
+# Configure Nginx
+cat > /etc/nginx/nginx.conf << EOL
+user www-data;
+worker_processes auto;
+pid /run/nginx.pid;
+include /etc/nginx/modules-enabled/*.conf;
+events {
+        worker_connections 768;
+        # multi_accept on;
+}
+http {
+        ##
+        # Basic Settings
+        ##
+        sendfile on;
+        tcp_nopush on;
+        types_hash_max_size 2048;
+        # server_tokens off;
+        # server_names_hash_bucket_size 64;
+        # server_name_in_redirect off;
+        include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+        ##
+        # SSL Settings
+        ##
+        ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3; # Dropping SSLv3, ref: POODLE
+        ssl_prefer_server_ciphers on;
+        ##
+        # Logging Settings
+        ##
+        # access_log /var/log/nginx/access.log;
+        error_log /var/log/nginx/error.log;
+        ##
+        # Gzip Settings
+        ##
+        gzip on;
+        # gzip_vary on;
+        # gzip_proxied any;
+        # gzip_comp_level 6;
+        # gzip_buffers 16 8k;
+        # gzip_http_version 1.1;
+        # gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+        ##
+        # Virtual Host Configs
+        ##
+        include /etc/nginx/conf.d/*.conf;
+        include /etc/nginx/sites-enabled/*;
+        ##
+        # Enable privacy preserving logging
+        ##
+        geoip_country /usr/share/GeoIP/GeoIP.dat;
+        log_format privacy '0.0.0.0 - \$remote_user [\$time_local] "\$request" \$status \$body_bytes_sent "\$http_referer" "-" \$geoip_country_code';
+        access_log /var/log/nginx/access.log privacy;
+}
+EOL
+
+if [ -e "/etc/nginx/sites-enabled/default" ]; then
+    rm /etc/nginx/sites-enabled/default
+fi
+ln -sf /etc/nginx/sites-available/hush-line.nginx /etc/nginx/sites-enabled/
+nginx -t && systemctl restart nginx || error_exit
+
+# Obtain SSL certificate
+certbot --nginx --agree-tos --non-interactive --email demo@scidsg.org --agree-tos -d $DOMAIN
+
+# Set up cron job to renew SSL certificate
+(crontab -l 2>/dev/null; echo "30 2 * * 1 /usr/bin/certbot renew --quiet") | crontab -
+echo "
+
 # Create a virtual environment and activate it
 python3 -m venv venv
 source venv/bin/activate
@@ -248,100 +343,6 @@ EOL
 
 echo "Basic environment and file structure have been created. You can now modify and expand the code as needed."
 
-# Configure Nginx
-cat > /etc/nginx/sites-available/hush-line.nginx << EOL
-server {
-    listen 80;
-    server_name ${DOMAIN};
-    location / {
-        proxy_pass http://127.0.0.1:5000;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_connect_timeout 300s;
-        proxy_send_timeout 300s;
-        proxy_read_timeout 300s;
-    }
-    
-        add_header Strict-Transport-Security "max-age=63072000; includeSubdomains";
-        add_header X-Frame-Options DENY;
-        add_header X-Content-Type-Options nosniff;
-        add_header Content-Security-Policy "default-src 'self'; frame-ancestors 'none'";
-        add_header Permissions-Policy "geolocation=(), midi=(), notifications=(), push=(), sync-xhr=(), microphone=(), camera=(), magnetometer=(), gyroscope=(), speaker=(), vibrate=(), fullscreen=(), payment=(), interest-cohort=()";
-        add_header Referrer-Policy "no-referrer";
-        add_header X-XSS-Protection "1; mode=block";
-}
-EOL
-
-# Configure Nginx
-cat > /etc/nginx/nginx.conf << EOL
-user www-data;
-worker_processes auto;
-pid /run/nginx.pid;
-include /etc/nginx/modules-enabled/*.conf;
-events {
-        worker_connections 768;
-        # multi_accept on;
-}
-http {
-        ##
-        # Basic Settings
-        ##
-        sendfile on;
-        tcp_nopush on;
-        types_hash_max_size 2048;
-        # server_tokens off;
-        # server_names_hash_bucket_size 64;
-        # server_name_in_redirect off;
-        include /etc/nginx/mime.types;
-        default_type application/octet-stream;
-        ##
-        # SSL Settings
-        ##
-        ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3; # Dropping SSLv3, ref: POODLE
-        ssl_prefer_server_ciphers on;
-        ##
-        # Logging Settings
-        ##
-        # access_log /var/log/nginx/access.log;
-        error_log /var/log/nginx/error.log;
-        ##
-        # Gzip Settings
-        ##
-        gzip on;
-        # gzip_vary on;
-        # gzip_proxied any;
-        # gzip_comp_level 6;
-        # gzip_buffers 16 8k;
-        # gzip_http_version 1.1;
-        # gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
-        ##
-        # Virtual Host Configs
-        ##
-        include /etc/nginx/conf.d/*.conf;
-        include /etc/nginx/sites-enabled/*;
-        ##
-        # Enable privacy preserving logging
-        ##
-        geoip_country /usr/share/GeoIP/GeoIP.dat;
-        log_format privacy '0.0.0.0 - \$remote_user [\$time_local] "\$request" \$status \$body_bytes_sent "\$http_referer" "-" \$geoip_country_code';
-        access_log /var/log/nginx/access.log privacy;
-}
-EOL
-
-if [ -e "/etc/nginx/sites-enabled/default" ]; then
-    rm /etc/nginx/sites-enabled/default
-fi
-ln -sf /etc/nginx/sites-available/hush-line.nginx /etc/nginx/sites-enabled/
-nginx -t && systemctl restart nginx || error_exit
-
-# Obtain SSL certificate
-certbot --nginx --agree-tos --non-interactive --email demo@scidsg.org --agree-tos -d $DOMAIN
-
-# Set up cron job to renew SSL certificate
-(crontab -l 2>/dev/null; echo "30 2 * * 1 /usr/bin/certbot renew --quiet") | crontab -
-echo "
 ✅ Installation complete!
                                                
 https://$DOMAIN
