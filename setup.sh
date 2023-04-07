@@ -41,12 +41,7 @@ def process_data():
     # Group data by company and state
     company_data = df.groupby("Company")["No. Of\nEmployees"].sum().sort_values(ascending=False).head(10)
     state_data = df.groupby("County/Parish")["No. Of\nEmployees"].sum()
-
-    # Convert data to JSON serializable format
-    processed_data = {
-        "company_data": company_data.to_dict(),
-        "state_data": state_data.to_dict()
-    }
+    
     # Group data by month
     df["Notice Date"] = pd.to_datetime(df["Notice Date"])
     df_2023 = df[df["Notice Date"].dt.year == 2023]
