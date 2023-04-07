@@ -35,6 +35,9 @@ app = Flask(__name__)
 def process_data():
     df = pd.read_excel("warn_report.xlsx", engine="openpyxl")
 
+    # Convert "No. Of\nEmployees" column to numeric values
+    df["No. Of\nEmployees"] = pd.to_numeric(df["No. Of\nEmployees"], errors='coerce')
+
     # Group data by company and state
     company_data = df.groupby("Company")["No. Of\nEmployees"].sum().sort_values(ascending=False).head(10)
     state_data = df.groupby("County/Parish")["No. Of\nEmployees"].sum()
