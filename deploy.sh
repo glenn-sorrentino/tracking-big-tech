@@ -25,9 +25,6 @@ echo "Domain: ${DOMAIN}"
 # Clone the repo
 git clone https://github.com/glenn-sorrentino/warn-dashboard.git
 
-# Create a project directory
-cd warn-dashboard
-
 # Download the XLS file
 wget -O warn_report.xlsx "https://edd.ca.gov/siteassets/files/jobs_and_training/warn/warn_report.xlsx"
 
