@@ -108,3 +108,10 @@ body {
 EOL
 
 echo "Basic environment and file structure have been created. You can now modify and expand the code as needed."
+
+# Run the Flask application
+echo "Starting the Flask application..."
+cd warn_dashboard
+source venv/bin/activate
+python app.py
+
