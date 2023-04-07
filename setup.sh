@@ -5,7 +5,7 @@ apt update
 apt -y dist-upgrade && apt -y autoremove
 
 # Install required system packages
-sudo apt install -y python3 python3-venv python3-pip whiptail
+sudo apt install -y python3 python3-venv python3-pip whiptail nginx git certbot python3-certbot-nginx
 
 # Function to display error message and exit
 error_exit() {
@@ -161,5 +161,6 @@ echo "Basic environment and file structure have been created. You can now modify
 
 # Run the Flask application
 echo "Starting the Flask application..."
+cd warn-dashboard
 source venv/bin/activate
 python app.py
