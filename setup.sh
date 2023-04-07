@@ -80,7 +80,7 @@ def process_data():
 def index():
     data = process_data()
     state_data = data["state_data"]
-    next_layoff = get_next_layoff(data["warn_data"])
+    next_layoff = get_next_layoff(data["df"])
     return render_template('index.html', state_data=state_data, next_layoff=next_layoff)
 
 def data():
