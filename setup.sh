@@ -148,41 +148,42 @@ function createPieChart(ctx, labels, data) {
         }
     });
 }
+
 function createMap(state_data) {
     console.log('State data:', state_data);
     const map = L.map('map').setView([37.7749, -122.4194], 6);
+
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
+
     // Fetch GeoJSON data for California counties
     fetch('https://raw.githubusercontent.com/codeforamerica/click_that_hood/main/public/data/california-counties.geojson')
         .then(response => response.json())
         .then(geojsonData => {
             L.geoJson(geojsonData, {
-                style: feature => {
-                    const county_name = feature.properties.name;
-                    const formatted_county_name = county_name + " County";
-                    const layoffs = state_data[formatted_county_name] || 0;
-                    const fillColor = layoffs > 0 ? 'red' : 'green';
-                    // Log unmatched county names
-                    if (!state_data[formatted_county_name]) {
-                        console.log(`Unmatched county: ${formatted_county_name}`);
-                    }
-                    return {
-                        fillColor: fillColor,
-                        fillOpacity: 0.5,
-                        weight: 1,
-                        color: 'black',
-                        opacity: 1
-                    };
-                },
                 onEachFeature: (feature, layer) => {
                     const county_name = feature.properties.name;
                     const formatted_county_name = county_name + " County";
                     const layoffs = state_data[formatted_county_name] || 0;
-                    layer.bindPopup(`<h3>${formatted_county_name}</h3><p>Layoffs: ${layoffs}</p>`);
+
+                    // Log unmatched county names
+                    if (!state_data[formatted_county_name]) {
+                        console.log(`Unmatched county: ${formatted_county_name}`);
+                    }
+
+                    const center = layer.getBounds().getCenter();
+
+                    const circle = L.circle(center, {
+                        color: 'blue',
+                        fillColor: '#30f',
+                        fillOpacity: 0.5,
+                        radius: Math.sqrt(layoffs) * 1000
+                    }).addTo(map);
+
+                    circle.bindPopup(`<h3>${formatted_county_name}</h3><p>Layoffs: ${layoffs}</p>`);
                 }
-            }).addTo(map);
+            });
         });
 }
 
