@@ -29,26 +29,7 @@ touch app.py templates/index.html static/main.js static/styles.css
 cat > app.py << EOL
 from flask import Flask, render_template, jsonify
 import pandas as pd
-import datetime
-
 app = Flask(__name__)
-
-def get_next_layoff(warn_data):
-    current_date = pd.Timestamp.now().normalize()
-    future_layoffs = warn_data[warn_data["Notice\nDate"] > current_date]
-    if not future_layoffs.empty:
-        next_layoff = future_layoffs.sort_values("Notice\nDate").iloc[0]
-        layoff_info = {
-            "company": next_layoff["Company"],
-            "layoff_date": next_layoff["Notice\nDate"].strftime("%Y-%m-%d"),
-            "city": next_layoff["City"],
-            "state": next_layoff["State"],
-            "employees_affected": next_layoff["No. Of\nEmployees"]
-        }
-        return layoff_info
-    else:
-        return None
-
 def process_data():
     df = pd.read_excel("warn_report.xlsx", engine="openpyxl")
     # Convert "No. Of\nEmployees" column to numeric values
@@ -70,26 +51,18 @@ def process_data():
     processed_data = {
         "company_data": company_data.to_dict(),
         "state_data": state_data.to_dict(),
-        "month_data": month_data_dict,
-        "next_layoff": get_next_layoff(df),
-        "df": df.to_json() # Add this line
+        "month_data": month_data_dict
     }
     return processed_data
-
 @app.route("/")
-
-@app.route('/')
 def index():
     data = process_data()
-    state_data = data["state_data"]
-    next_layoff = get_next_layoff(data["df"])
-    return render_template('index.html', state_data=state_data, next_layoff=next_layoff)
-
+    return render_template("index.html", data=data)
+@app.route("/data")
 def data():
     return jsonify(process_data())
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
-   
 EOL
 
 # Write sample code to templates/index.html
@@ -107,7 +80,6 @@ cat > templates/index.html << EOL
 </head>
 <body>
     <h1>WARN Dashboard</h1>
-    <div id="next-layoff"></div>
     <div>
         <h2>Top 10 Companies by Layoffs</h2>
         <canvas id="companyBarChart"></canvas>
@@ -154,7 +126,6 @@ function createBarChart(ctx, labels, data) {
         }
     });
 }
-
 function createPieChart(ctx, labels, data) {
     return new Chart(ctx, {
         type: 'pie',
@@ -177,15 +148,12 @@ function createPieChart(ctx, labels, data) {
         }
     });
 }
-
 function createMap(state_data) {
     console.log('State data:', state_data);
     const map = L.map('map').setView([37.7749, -122.4194], 6);
-
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
-
     // Fetch GeoJSON data for California counties
     fetch('https://raw.githubusercontent.com/codeforamerica/click_that_hood/main/public/data/california-counties.geojson')
         .then(response => response.json())
@@ -195,34 +163,28 @@ function createMap(state_data) {
                     const county_name = feature.properties.name;
                     const formatted_county_name = county_name + " County";
                     const layoffs = state_data[formatted_county_name] || 0;
-
                     // Log unmatched county names
                     if (!state_data[formatted_county_name]) {
                         console.log(`Unmatched county: ${formatted_county_name}`);
                     }
-
                     const center = layer.getBounds().getCenter();
-
                     const circle = L.circle(center, {
                         color: 'blue',
                         fillColor: '#30f',
                         fillOpacity: 0.5,
                         radius: Math.sqrt(layoffs) * 1000
                     }).addTo(map);
-
                     circle.bindPopup(`<h3>${formatted_county_name}</h3><p>Layoffs: ${layoffs}</p>`);
                 }
             });
         });
 }
-
 function createLineChart(ctx, labels, data, sortByMonth = false) {
     // Assign an index value to each month if sortByMonth is true
     const monthIndices = sortByMonth ? {
         'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
         'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
     } : null;
-
     // Sort labels and data based on the month indices
     const sortedData = sortByMonth ? labels.map((label, i) => [label, data[i]])
                                          .sort((a, b) => {
@@ -230,13 +192,11 @@ function createLineChart(ctx, labels, data, sortByMonth = false) {
                                              const bMonth = b[0].slice(0, 3);
                                              const aYear = parseInt(a[0].slice(4));
                                              const bYear = parseInt(b[0].slice(4));
-
                                              return (aYear - bYear) || (monthIndices[aMonth] - monthIndices[bMonth]);
                                          })
                                    : labels.map((label, i) => [label, data[i]]);
     const sortedLabels = sortedData.map(([label, _]) => label);
     const sortedValues = sortedData.map(([_, value]) => value);
-
     return new Chart(ctx, {
         type: 'line',
         data: {
@@ -259,21 +219,6 @@ function createLineChart(ctx, labels, data, sortByMonth = false) {
         }
     });
 }
-
-function displayNextLayoff(nextLayoff) {
-    if (nextLayoff) {
-        const nextLayoffContainer = document.getElementById("next-layoff");
-        const layoffDate = new Date(nextLayoff.layoff_date).toLocaleDateString();
-        nextLayoffContainer.innerHTML = `
-            <h3>Next Planned Layoff</h3>
-            <p><strong>Company:</strong> ${nextLayoff.company}</p>
-            <p><strong>Date:</strong> ${layoffDate}</p>
-            <p><strong>Location:</strong> ${nextLayoff.city}, ${nextLayoff.state}</p>
-            <p><strong>Employees Affected:</strong> ${nextLayoff.employees_affected}</p>
-        `;
-    }
-}
-
 document.addEventListener("DOMContentLoaded", function() {
     fetch('/data')
         .then(response => response.json())
@@ -287,10 +232,8 @@ document.addEventListener("DOMContentLoaded", function() {
             const monthLabels = Object.keys(data.month_data);
             const monthData = Object.values(data.month_data);
             createLineChart(monthLineCtx, monthLabels, monthData, true);
-            displayNextLayoff(data.next_layoff); // Add this line
         });
 });
-
 EOL
 
 # Write sample code to static/styles.css
