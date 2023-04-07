@@ -34,7 +34,7 @@ import datetime
 app = Flask(__name__)
 
 def get_next_layoff(warn_data):
-    current_date = datetime.datetime.now().date()
+    current_date = pd.Timestamp.now().normalize()
     future_layoffs = warn_data[warn_data["Notice\nDate"] > current_date]
     if not future_layoffs.empty:
         next_layoff = future_layoffs.sort_values("Notice\nDate").iloc[0]
