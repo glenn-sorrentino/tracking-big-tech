@@ -216,11 +216,6 @@ function createLineChart(ctx, labels, data) {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-  ...
-  createMap(data.state_data);
-});
-
-document.addEventListener("DOMContentLoaded", function() {
     fetch('/data')
         .then(response => response.json())
         .then(data => {
