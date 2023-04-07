@@ -121,10 +121,10 @@ function createBarChart(ctx, labels, data) {
 
     return new Chart(ctx, {
         data: {
-            labels: labels,
+            labels: sortedLabels,
             datasets: [{
                 label: 'Employees Affected',
-                data: data,
+                data: sortedValues,
                 backgroundColor: 'rgba(75, 192, 192, 0.2)',
                 borderColor: 'rgba(75, 192, 192, 1)',
                 borderWidth: 1
