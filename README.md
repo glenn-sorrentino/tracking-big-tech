@@ -1,5 +1,5 @@
-# warn-dashboard
+# Tracking Big Tech
 
 ```
-curl -sSL https://raw.githubusercontent.com/glenn-sorrentino/warn-dashboard/main/setup.sh | bash
+curl -sSL https://raw.githubusercontent.com/scidsg/tracking-big-tech/main/setup.sh | bash
 ```
